@@ -3,1156 +3,828 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LAVD — Observatório de Persecução Penal & Indicadores Criminológicos</title>
-  <!-- Tailwind CSS CDN -->
+  <title>LAVD & GEVID | Observatório de Violência</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Efeitos de Navegação e Cards */
+    .nav-btn { transition: all 0.3s ease; }
+    .nav-btn.active { background-color: #1e1b4b; color: #ffffff; border-color: #1e1b4b; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .nav-btn:not(.active) { color: #64748b; background-color: transparent; }
+    .nav-btn:not(.active):hover { color: #0f172a; background-color: #e2e8f0; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    
+    /* Animação suave para troca de abas */
+    .fade-in { animation: fadeIn 0.4s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col font-sans">
+<body class="text-slate-800 min-h-screen pb-16">
 
-  <!-- HEADER INSTITUCIONAL -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-red-600 font-black">
-          ⚖️
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="font-bold text-base leading-tight">LAVD — Liga Acadêmica de Violência e Direito</h1>
-            <span class="text-[10px] font-black bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">ALAGOAS</span>
+  <!-- HEADER PROFISSIONAL -->
+  <header class="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 sticky top-0 z-40 shadow-lg border-b border-indigo-800/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div class="flex flex-col xl:flex-row justify-between items-center gap-5">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-inner shrink-0">
+            <span class="text-white font-black text-xl">⚖️</span>
           </div>
-          <p class="text-xs text-slate-500">Repositório de Persecução Penal & Indicadores Criminológicos (2020 - 2026)</p>
+          <div>
+            <h1 class="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+              LAVD <span class="text-indigo-400 font-light">|</span> GEVID
+            </h1>
+            <p class="text-xs text-indigo-200 font-medium tracking-wide">OBSERVATÓRIO DE EVIDÊNCIAS & VITIMOLOGIA INSTITUCIONAL • ALAGOAS</p>
+          </div>
         </div>
-      </div>
-
-      <div class="flex items-center flex-wrap gap-2">
-        <button onclick="abrirModal('modalMetodologia')" class="px-3 py-1.5 text-xs font-semibold rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition">
-          Metodologia & Validação
-        </button>
-        <button onclick="abrirModal('modalJurimetria')" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-purple-600 text-white hover:bg-purple-700 transition">
-          Jurimetria & Fluxo
-        </button>
-        <button onclick="abrirModal('modalForum')" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition">
-          Fórum & Pesquisas
-        </button>
-        <button onclick="abrirModal('modalAnotacoes')" class="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 transition">
-          Fichamento
-        </button>
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800 mono">
-          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span id="contadorHeader">0</span> Registros
-        </span>
+        
+        <div class="flex flex-wrap justify-center bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/50 backdrop-blur-md gap-1">
+          <button onclick="mudarAba('gevid')" id="btn-gevid" class="nav-btn active px-3 py-2 text-[13px] font-bold rounded-lg">📊 Painel GEVID</button>
+          <button onclick="mudarAba('lavd')" id="btn-lavd" class="nav-btn px-3 py-2 text-[13px] font-bold rounded-lg">📁 Acervo Policial</button>
+          <button onclick="mudarAba('forum')" id="btn-forum" class="nav-btn px-3 py-2 text-[13px] font-bold rounded-lg">📚 Fórum Científico</button>
+          <button onclick="mudarAba('mural')" id="btn-mural" class="nav-btn px-3 py-2 text-[13px] font-bold rounded-lg">📝 Mural Público</button>
+          <button onclick="mudarAba('fontes')" id="btn-fontes" class="nav-btn px-3 py-2 text-[13px] font-bold rounded-lg bg-indigo-900/40 text-indigo-200 hover:text-white border border-indigo-500/30">🔗 Fontes & Dados</button>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- CONTEÚDO PRINCIPAL -->
-  <main class="max-w-7xl mx-auto w-full p-4 md:p-6 space-y-5 flex-1">
-    
-    <!-- BANNER GARANTIA AUDITÁVEL -->
-    <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-3.5 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <span class="text-blue-600 text-2xl">🛡️</span>
-        <div>
-          <h2 class="text-sm font-bold text-blue-950">Cadeia de Custódia da Informação e Rastreabilidade Metodológica</h2>
-          <p class="text-xs text-slate-600">Todos os registros catalogados possuem identificação de procedimento oficial (Inquérito PCAL ou Ação Penal SAJ/TJAL) com fontes auditáveis.</p>
-        </div>
-      </div>
-      <button onclick="abrirModal('modalMetodologia')" class="text-xs font-bold text-blue-700 hover:underline shrink-0">
-        Auditar Fontes &rarr;
-      </button>
-    </div>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
 
-    <!-- FILTROS COMPLEXOS & BUSCA -->
-    <section class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
-      <!-- Seletor de Ano -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        <span class="font-bold text-slate-500 uppercase tracking-wider shrink-0">Ano do Fato:</span>
-        <div id="grupoAnos" class="flex gap-1">
-          <!-- Gerado via JS -->
-        </div>
-      </div>
-
-      <!-- Barra de Pesquisa + Município + Exportar -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <div class="md:col-span-6 relative">
-          <input type="text" id="campoBusca" placeholder="Filtrar por bairro, calibre, procedimento penal, autoridade policial..." 
-                 class="w-full text-sm pl-9 pr-8 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50">
-          <span class="absolute left-3 top-2.5 text-slate-400 text-sm">🔍</span>
-          <button id="limparBuscaBtn" onclick="limparCampoBusca()" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 text-sm font-bold">&times;</button>
-        </div>
-
-        <div class="md:col-span-4 flex items-center gap-2">
-          <label for="selectMunicipio" class="text-xs font-bold text-slate-500 shrink-0">Comarca:</label>
-          <select id="selectMunicipio" class="w-full text-sm py-2 px-3 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <!-- Gerado via JS -->
-          </select>
-        </div>
-
-        <div class="md:col-span-2">
-          <button onclick="exportarCSV()" class="w-full h-full py-2 px-3 text-xs font-bold bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg flex items-center justify-center gap-1.5 transition">
-            <span>📥</span> Exportar CSV
-          </button>
-        </div>
-      </div>
-
-      <!-- Chips Rápidos -->
-      <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
-        <span class="text-[11px] font-bold text-slate-400 uppercase">Filtros Rápidos:</span>
-        <div id="containerChips" class="flex flex-wrap gap-1.5">
-          <!-- Gerado via JS -->
-        </div>
-        <button id="btnLimparTudo" onclick="resetarTodosFiltros()" class="hidden text-xs text-red-600 font-bold hover:underline ml-auto">
-          Limpar Filtros
-        </button>
-      </div>
-    </section>
-
-    <!-- CARDS DE MÉTRICAS -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div class="flex justify-between text-xs font-bold text-slate-500 uppercase">
-          <span>Amostra Filtrada</span>
-          <span class="text-blue-500">📁</span>
-        </div>
-        <div id="cardTotal" class="text-2xl font-black mt-1 mono">0</div>
-        <p id="cardPeriodo" class="text-[11px] text-slate-500 mt-0.5">Período: 2020-2026</p>
-      </div>
-
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div class="flex justify-between text-xs font-bold text-slate-500 uppercase">
-          <span>Inquérito Policial</span>
-          <span class="text-amber-500">🛡️</span>
-        </div>
-        <div id="cardInquerito" class="text-2xl font-black text-amber-600 mt-1 mono">0</div>
-        <p class="text-[11px] text-slate-500 mt-0.5">Em diligência investigativa (PCAL)</p>
-      </div>
-
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div class="flex justify-between text-xs font-bold text-slate-500 uppercase">
-          <span>Denúncia / Júri</span>
-          <span class="text-purple-500">⚖️</span>
-        </div>
-        <div id="cardJudiciario" class="text-2xl font-black text-purple-600 mt-1 mono">0</div>
-        <p class="text-[11px] text-slate-500 mt-0.5">Denunciados pelo MPAL / TJAL</p>
-      </div>
-
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div class="flex justify-between text-xs font-bold text-slate-500 uppercase">
-          <span>Sentenciados</span>
-          <span class="text-emerald-500">✅</span>
-        </div>
-        <div id="cardSentenciado" class="text-2xl font-black text-emerald-600 mt-1 mono">0</div>
-        <p class="text-[11px] text-slate-500 mt-0.5">Decisões definitivas de mérito</p>
-      </div>
-    </section>
-
-    <!-- GRÁFICOS TEMPORAL E BALÍSTICA -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <div class="lg:col-span-7 bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-        <div class="mb-3">
-          <h3 class="font-bold text-sm">Evolução Temporal dos Casos (2020 - 2026)</h3>
-          <p class="text-xs text-slate-500">Volume anual de ocorrências e curva de tendência no recorte selecionado</p>
-        </div>
-        <div class="h-48">
-          <canvas id="graficoTemporal"></canvas>
-        </div>
-      </div>
-
-      <div class="lg:col-span-5 bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-        <div class="mb-3">
-          <h3 class="font-bold text-sm">Vetores e Instrumentos Empregados</h3>
-          <p class="text-xs text-slate-500">Distribuição balística dos calibres e armas dominantes</p>
-        </div>
-        <div class="h-48">
-          <canvas id="graficoArmas"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- TABELA COMPLETA DE REGISTROS -->
-    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2">
-        <div>
-          <h3 class="font-bold text-sm">Acervo Documental de Crimes Dolosos contra a Vida</h3>
-          <p class="text-xs text-slate-500">Clique sobre qualquer linha para abrir a auditoria forense e chave de custódia</p>
-        </div>
-        <span class="text-xs font-semibold text-slate-500" id="infoTabelaContagem">Exibindo 0 casos</span>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
-              <th class="py-3 px-4 w-36">REGISTRO / DATA</th>
-              <th class="py-3 px-4 w-48">LOCALIZAÇÃO</th>
-              <th class="py-3 px-4">CRIME & MEIO EMPREGADO</th>
-              <th class="py-3 px-4 w-44">FONTE PRIMÁRIA</th>
-              <th class="py-3 px-4 text-right w-44">PERSECUÇÃO</th>
-            </tr>
-          </thead>
-          <tbody id="corpoTabela" class="divide-y divide-slate-200 text-slate-700">
-            <!-- Linhas geradas via JavaScript -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <!-- MODAL: DOSSIÊ DO CASO -->
-  <div id="modalDossie" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl border border-slate-200">
-      <div class="flex justify-between items-start border-b border-slate-200 pb-3">
-        <div>
-          <div class="flex items-center gap-2">
-            <span id="dossieId" class="text-lg font-bold mono"></span>
-            <span class="text-slate-400">•</span>
-            <span id="dossieProc" class="text-sm font-semibold text-slate-500 mono"></span>
+    <!-- ========================================== -->
+    <!-- ABA 1: PAINEL GEVID                        -->
+    <!-- ========================================== -->
+    <section id="aba-gevid" class="space-y-8 fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-2 h-8 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/50"></div>
+          <div>
+            <h2 class="text-2xl font-black text-slate-800 tracking-tight">Capacidade da Rede de Proteção</h2>
+            <p class="text-sm text-slate-500 font-medium">Baseado no 10º Diagnóstico Nacional (Atualizado 2026)</p>
           </div>
-          <p id="dossieSubtitulo" class="text-xs text-slate-500 mt-0.5"></p>
         </div>
-        <button onclick="fecharModal('modalDossie')" class="text-slate-400 hover:text-slate-700 font-bold text-xl">&times;</button>
+      </div>
+      
+      <!-- Cards de Métricas GEVID -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div class="glass-card p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition group">
+          <p class="text-[11px] text-slate-500 font-black uppercase tracking-widest mb-2 group-hover:text-indigo-600 transition">Unidades Ativas</p>
+          <p class="text-4xl font-black text-slate-800">530 <span class="text-lg font-medium text-slate-400">/ 585</span></p>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mt-4 overflow-hidden"><div class="bg-emerald-500 h-1.5 rounded-full" style="width: 90.5%"></div></div>
+          <p class="text-[11px] text-slate-500 mt-2 font-medium">Taxa de resposta de 90.5% no Brasil</p>
+        </div>
+        <div class="glass-card p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition">
+          <p class="text-[11px] text-slate-500 font-black uppercase tracking-widest mb-2">Atendimentos GERAIS</p>
+          <p class="text-4xl font-black text-indigo-600">782<span class="text-indigo-400">.474</span></p>
+          <p class="text-[11px] text-slate-500 mt-4 font-medium border-t border-slate-100 pt-2">Demanda total registrada na rede</p>
+        </div>
+        <div class="glass-card p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition">
+          <p class="text-[11px] text-slate-500 font-black uppercase tracking-widest mb-2">Mulheres Vítimas</p>
+          <p class="text-4xl font-black text-rose-600">329<span class="text-rose-400">.451</span></p>
+          <p class="text-[11px] text-slate-500 mt-4 font-medium border-t border-slate-100 pt-2">Média de 2,3 atendimentos por vítima</p>
+        </div>
+        <div class="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl shadow-sm border border-indigo-100 hover:shadow-md transition relative overflow-hidden">
+          <div class="absolute -right-4 -top-4 text-8xl opacity-10">📍</div>
+          <p class="text-[11px] text-indigo-800 font-black uppercase tracking-widest mb-2 relative z-10">Foco Nordeste</p>
+          <p class="text-4xl font-black text-indigo-950 relative z-10">53<span class="text-indigo-700">.067</span></p>
+          <p class="text-[11px] text-indigo-700 mt-4 font-bold border-t border-indigo-200/50 pt-2 relative z-10">Atendimentos diretos na região</p>
+        </div>
       </div>
 
-      <!-- Card Fonte Oficial -->
-      <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl flex items-center justify-between">
-        <div>
-          <div class="flex items-center gap-1 text-emerald-800 font-bold text-xs">
-            <span>🛡️</span> FONTE PRIMÁRIA AUDITADA: <span id="dossieFonte"></span>
+      <!-- Gráfico de Risco -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass-card p-8 rounded-2xl shadow-sm border border-slate-200">
+          <div class="mb-6 flex justify-between items-start">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">Escalada do Risco: Stalking e Violência Psicológica</h3>
+              <p class="text-sm text-slate-500">Curva histórica do Estado de Alagoas (2020 - 2026)</p>
+            </div>
+            <span class="bg-rose-100 text-rose-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Atenção Crítica</span>
           </div>
-          <div class="text-[11px] text-slate-600 mt-1 mono" id="dossieChave"></div>
+          <div class="h-[320px] w-full"><canvas id="graficoEvolucaoRisco"></canvas></div>
         </div>
-        <a id="dossieLinkFonte" href="#" target="_blank" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg transition">
-          Acessar Portal &rarr;
-        </a>
-      </div>
 
-      <!-- Síntese do Fato -->
-      <div>
-        <h4 class="text-[11px] font-bold text-slate-400 uppercase">Dinâmica dos Fatos / Histórico Auditado</h4>
-        <div id="dossieSintese" class="mt-1 bg-slate-50 p-3 rounded-lg text-xs leading-relaxed border border-slate-200 text-slate-800"></div>
-      </div>
-
-      <!-- Detalhamento -->
-      <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2 text-xs">
-        <div class="flex justify-between border-b border-slate-200/60 pb-1.5">
-          <span class="font-bold text-slate-500">Localização e Referência:</span>
-          <span id="dossieLocal" class="font-medium text-right text-slate-800"></span>
-        </div>
-        <div class="flex justify-between border-b border-slate-200/60 pb-1.5">
-          <span class="font-bold text-slate-500">Tipificação Penal:</span>
-          <span id="dossieTipo" class="font-medium text-right text-slate-800"></span>
-        </div>
-        <div class="flex justify-between border-b border-slate-200/60 pb-1.5">
-          <span class="font-bold text-slate-500">Armamento & Calibre:</span>
-          <span id="dossieCalibre" class="font-medium text-right text-slate-800"></span>
-        </div>
-        <div class="flex justify-between border-b border-slate-200/60 pb-1.5">
-          <span class="font-bold text-slate-500">Perfil da Vítima:</span>
-          <span id="dossieVitima" class="font-medium text-right text-slate-800"></span>
-        </div>
-        <div class="flex justify-between border-b border-slate-200/60 pb-1.5">
-          <span class="font-bold text-slate-500">Motivação Aparente:</span>
-          <span id="dossieMotivo" class="font-medium text-right text-slate-800"></span>
-        </div>
-        <div class="flex justify-between border-b border-slate-200/60 pb-1.5">
-          <span class="font-bold text-slate-500">Órgão Conducente:</span>
-          <span id="dossieOrgao" class="font-medium text-right text-slate-800"></span>
-        </div>
-        <div class="flex justify-between border-b border-slate-200/60 pb-1.5">
-          <span class="font-bold text-slate-500">Laudo Pericial Forense (IC/IML):</span>
-          <span id="dossieLaudo" class="font-medium text-right text-slate-800"></span>
-        </div>
-        <div class="flex justify-between">
-          <span class="font-bold text-slate-500">Medida Protetiva Prévia:</span>
-          <span id="dossieMedida" class="font-medium text-right text-slate-800"></span>
+        <div class="bg-gradient-to-b from-slate-900 to-indigo-950 text-white p-8 rounded-2xl shadow-lg border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-6">
+              <span class="text-2xl">🧠</span>
+              <h3 class="text-lg font-black text-indigo-200">Insights Vitimológicos</h3>
+            </div>
+            <ul class="space-y-5 text-sm text-slate-300">
+              <li class="flex gap-3 items-start bg-white/5 p-3 rounded-lg border border-white/10">
+                <span class="text-rose-400 font-black mt-0.5">01</span>
+                <p><strong class="text-white">Explosão em 2024-2025:</strong> Violência psicológica saltou de 595 para 961 (<span class="text-rose-400 font-bold">↑ 61%</span>). Perseguição disparou de 1.287 para 1.851 (<span class="text-rose-400 font-bold">↑ 43%</span>).</p>
+              </li>
+              <li class="flex gap-3 items-start bg-white/5 p-3 rounded-lg border border-white/10">
+                <span class="text-indigo-400 font-black mt-0.5">02</span>
+                <p><strong class="text-white">Marco Zero (Stalking):</strong> Antes de 2021, não havia tipificação específica (Art. 147-A). O pico ilustra a demanda judicial reprimida.</p>
+              </li>
+              <li class="flex gap-3 items-start bg-white/5 p-3 rounded-lg border border-white/10">
+                <span class="text-emerald-400 font-black mt-0.5">03</span>
+                <p><strong class="text-white">Prevenção Primária:</strong> Como estes são os crimes que antecedem o feminicídio, a rede (Patrulha Maria da Penha) precisa crescer na mesma proporção para evitar letalidade.</p>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- Status Final -->
-      <div id="dossieBoxStatus" class="p-3.5 rounded-xl border flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Estágio da Persecução</span>
-          <div id="dossieStatusTexto" class="text-sm font-bold"></div>
+    <!-- ========================================== -->
+    <!-- ABA 2: ACERVO LAVD (DADOS AMPLIADOS)       -->
+    <!-- ========================================== -->
+    <section id="aba-lavd" class="hidden space-y-6 fade-in">
+      
+      <!-- Box de Filtros Inteligentes -->
+      <div class="glass-card p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col lg:flex-row gap-6 items-end">
+          <div class="flex-1 w-full">
+            <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">Ano do Fato</label>
+            <div id="grupoAnos" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div class="w-full lg:w-64">
+            <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">Comarcas de Alagoas</label>
+            <select id="selectMunicipio" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"></select>
+          </div>
+          <div class="w-full lg:w-80 relative">
+            <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">Busca Avançada</label>
+            <input type="text" id="campoBusca" placeholder="Ex: Qualificado, 9mm, Maria da Penha..." class="w-full border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            <span class="absolute left-3 top-[34px] text-slate-400">🔍</span>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: JURIMETRIA & GARGALOS PROCESSUAIS -->
-  <div id="modalJurimetria" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl border border-slate-200">
-      <div class="flex justify-between items-center border-b border-slate-200 pb-3">
-        <div>
-          <h3 class="font-bold text-base text-purple-900 flex items-center gap-2">
-            <span>📊</span> Painel de Jurimetria Processual Penal — LAVD
-          </h3>
-          <p class="text-xs text-slate-500">Funil de atrito probatório, gargalos de pronúncia e efetividade do Júri em Alagoas</p>
-        </div>
-        <button onclick="fecharModal('modalJurimetria')" class="text-slate-400 hover:text-slate-700 font-bold text-xl">&times;</button>
-      </div>
-
-      <!-- FUNIL DE ATRIBUTO PROCESSUAL -->
-      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-        <h4 class="text-xs font-bold uppercase text-slate-500">1. Funil da Persecução Penal (Atrito Institucional)</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center" id="funilCards">
-          <!-- Gerado via JS -->
+        <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2" id="containerChips"></div>
+          <button onclick="resetarTodosFiltros()" id="btnLimparTudo" class="hidden text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 px-3 py-1.5 rounded-lg transition">Limpar Filtros ✕</button>
         </div>
       </div>
 
-      <!-- GRÁFICOS E TAXAS -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
-          <h4 class="text-xs font-bold text-slate-700 uppercase mb-2">Composição da Amostra por Fase</h4>
-          <div class="h-44">
+      <!-- Mini-Cards de Resumo LAVD -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 text-center shadow-sm">
+          <div class="text-[10px] text-slate-500 font-black tracking-widest uppercase">Base Documental</div>
+          <div class="text-3xl font-black text-slate-800 mono mt-1" id="cardTotal">0</div>
+          <div class="text-[10px] text-slate-400 mt-1">Registros Auditados</div>
+        </div>
+        <div class="glass-card p-5 rounded-2xl border border-amber-200 bg-amber-50/30 text-center shadow-sm">
+          <div class="text-[10px] text-amber-700 font-black tracking-widest uppercase">Fase Policial</div>
+          <div class="text-3xl font-black text-amber-700 mono mt-1" id="cardInquerito">0</div>
+          <div class="text-[10px] text-amber-600 mt-1">Em investigação (PCAL)</div>
+        </div>
+        <div class="glass-card p-5 rounded-2xl border border-purple-200 bg-purple-50/30 text-center shadow-sm">
+          <div class="text-[10px] text-purple-700 font-black tracking-widest uppercase">Ação Penal Ativa</div>
+          <div class="text-3xl font-black text-purple-700 mono mt-1" id="cardJudiciario">0</div>
+          <div class="text-[10px] text-purple-600 mt-1">Denunciados (TJAL)</div>
+        </div>
+        <div class="glass-card p-5 rounded-2xl border border-emerald-200 bg-emerald-50/30 text-center shadow-sm">
+          <div class="text-[10px] text-emerald-700 font-black tracking-widest uppercase">Trânsito em Julgado</div>
+          <div class="text-3xl font-black text-emerald-700 mono mt-1" id="cardSentenciado">0</div>
+          <div class="text-[10px] text-emerald-600 mt-1">Decisões de Mérito</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Tabela Expansiva -->
+        <div class="lg:col-span-2 glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[550px]">
+          <div class="bg-white px-5 py-4 border-b border-slate-200 flex justify-between items-center z-10 shadow-sm">
+            <div>
+              <h3 class="font-bold text-slate-800 text-lg">Acervo Documental (Alagoas)</h3>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">Clique nas linhas para abrir a auditoria forense do caso</p>
+            </div>
+            <span id="infoTabelaContagem" class="text-xs text-indigo-700 bg-indigo-50 font-bold px-3 py-1.5 rounded-lg border border-indigo-100"></span>
+          </div>
+          <div class="overflow-y-auto flex-1 bg-slate-50/30">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+              <thead class="bg-slate-100 text-slate-600 text-[10px] uppercase font-black tracking-wider sticky top-0 border-b border-slate-200 z-10 shadow-sm">
+                <tr>
+                  <th class="px-5 py-3">Registro & Autoridade</th>
+                  <th class="px-5 py-3">Crime & Vitimologia</th>
+                  <th class="px-5 py-3">Status de Persecução</th>
+                </tr>
+              </thead>
+              <tbody id="corpoTabela" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Painel de Jurimetria Lateral -->
+        <div class="glass-card p-6 rounded-2xl shadow-sm border border-slate-200 h-[550px] flex flex-col">
+          <h3 class="font-bold text-slate-800 text-lg mb-1">Painel Jurimétrico</h3>
+          <p class="text-xs text-slate-500 font-medium mb-6">Amostragem com base no filtro atual</p>
+          
+          <div class="flex-1 flex flex-col justify-center min-h-[200px]">
             <canvas id="graficoPizzaStatus"></canvas>
           </div>
-        </div>
-
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-          <h4 class="text-xs font-bold text-slate-700 uppercase">Indicadores Forenses Críticos</h4>
           
-          <div class="bg-white p-3 rounded-lg border border-slate-200 flex justify-between items-center">
-            <div>
-              <div class="text-xs font-bold text-purple-900">Taxa de Judicialização</div>
-              <div class="text-[10px] text-slate-500">Casos que ultrapassaram a fase de inquérito</div>
+          <div class="space-y-3 pt-6 mt-4 border-t border-slate-100">
+             <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center">
+              <div>
+                <span class="block text-[10px] text-slate-500 font-black uppercase tracking-widest">Taxa de Judicialização</span>
+                <span class="text-xs text-slate-400">Casos com denúncia aceita</span>
+              </div>
+              <span class="text-lg font-black text-indigo-600 mono" id="jurimetriaTaxaJudicial">0%</span>
             </div>
-            <div id="jurimetriaTaxaJudicial" class="text-lg font-black text-purple-700 mono">0%</div>
-          </div>
-
-          <div class="bg-white p-3 rounded-lg border border-slate-200 flex justify-between items-center">
-            <div>
-              <div class="text-xs font-bold text-blue-900">Materialidade Pericial Homologada</div>
-              <div class="text-[10px] text-slate-500">Laudos com necrópsia do IC/IML juntados aos autos</div>
+            <div class="bg-rose-50 border border-rose-100 rounded-xl p-3 flex justify-between items-center">
+              <div>
+                <span class="block text-[10px] text-rose-700 font-black uppercase tracking-widest">Quebra de Protetiva</span>
+                <span class="text-xs text-rose-500">Apenas sobre Feminicídios</span>
+              </div>
+              <span class="text-lg font-black text-rose-700 mono" id="jurimetriaTaxaMedida">0%</span>
             </div>
-            <div id="jurimetriaTaxaLaudo" class="text-lg font-black text-blue-700 mono">0%</div>
-          </div>
-
-          <div class="bg-white p-3 rounded-lg border border-slate-200 flex justify-between items-center">
-            <div>
-              <div class="text-xs font-bold text-red-900">Quebra de Medida Protetiva</div>
-              <div class="text-[10px] text-slate-500">Feminicídios com prévia tutela judicial</div>
-            </div>
-            <div id="jurimetriaTaxaMedida" class="text-lg font-black text-red-700 mono">0%</div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- MODAL: FÓRUM DE PESQUISAS & UPLOAD -->
-  <div id="modalForum" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl border border-slate-200">
-      <div class="flex justify-between items-center border-b border-slate-200 pb-3">
-        <div>
-          <h3 class="font-bold text-base text-blue-900 flex items-center gap-2">
-            <span>📚</span> Fórum Acadêmico de Pesquisas & Teses — LAVD
-          </h3>
-          <p class="text-xs text-slate-500">Repositório científico e envio de trabalhos com arquivos anexados</p>
-        </div>
-        <button onclick="fecharModal('modalForum')" class="text-slate-400 hover:text-slate-700 font-bold text-xl">&times;</button>
-      </div>
-
-      <!-- Abas Repositório vs Lançar -->
-      <div class="flex border-b border-slate-200 text-xs font-bold gap-6">
-        <button id="tabRepoBtn" onclick="trocarAbaForum('repo')" class="pb-2 text-blue-600 border-b-2 border-blue-600">
-          Repositório de Trabalhos (<span id="contagemArtigosForum">0</span>)
-        </button>
-        <button id="tabLancBtn" onclick="trocarAbaForum('lancar')" class="pb-2 text-slate-500 hover:text-slate-800">
-          Anexar e Publicar Pesquisa
-        </button>
-      </div>
-
-      <!-- CONTEÚDO ABA 1: REPOSITÓRIO -->
-      <div id="abaForumRepo" class="space-y-3">
-        <input type="text" id="buscaForumInput" oninput="renderizarArtigosForum()" placeholder="Buscar pesquisas por título, autor, metodologia..." 
-               class="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <!-- ========================================== -->
+    <!-- ABA 3: FÓRUM CIENTÍFICO E SUBMISSÃO        -->
+    <!-- ========================================== -->
+    <section id="aba-forum" class="hidden max-w-6xl mx-auto space-y-6 fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
         
-        <div id="listaArtigosForum" class="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
-          <!-- Artigos injetados via JS -->
+        <!-- Coluna Esquerda: Submissão (2/5) -->
+        <div class="md:col-span-2 glass-card p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 h-fit">
+          <h2 class="text-xl font-black text-indigo-950 mb-1">Publicar Pesquisa</h2>
+          <p class="text-sm text-slate-500 mb-6">Submeta artigos ou resumos para o acervo LAVD.</p>
+          
+          <form id="formForum" class="space-y-4" onsubmit="submeterPesquisa(event)">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Título do Trabalho *</label>
+              <input type="text" id="formTitulo" required placeholder="Ex: Análise Empírica..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Autores / Instituição *</label>
+              <input type="text" id="formAutor" required placeholder="Ex: GEVID - UFAL" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Eixo Temático</label>
+              <select id="formCategoria" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                <option>Capacidade Institucional & Rede</option>
+                <option>Dinâmica do Risco & Stalking</option>
+                <option>Jurimetria & Funil Penal</option>
+                <option>Criminologia Crítica</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Anexo (Simulação)</label>
+              <input type="file" id="formArquivo" required accept=".pdf" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition cursor-pointer">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-sm transition mt-4 shadow-md">
+              Publicar no Repositório
+            </button>
+          </form>
+        </div>
+
+        <!-- Coluna Direita: Feed do Fórum (3/5) -->
+        <div class="md:col-span-3 glass-card p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
+          <h2 class="text-xl font-black text-slate-800 mb-1">Acervo Científico Compartilhado</h2>
+          <p class="text-sm text-slate-500 mb-6">Trabalhos vinculados à agenda do GEVID e dados do LAVD.</p>
+          
+          <div class="relative mb-6">
+            <input type="text" id="buscaForumInput" placeholder="Filtrar trabalhos por palavra-chave..." class="w-full border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-inner" oninput="renderizarArtigosForum()">
+            <span class="absolute left-3 top-[11px] text-slate-400 text-lg">🔍</span>
+          </div>
+          
+          <div id="listaArtigosForum" class="space-y-4 max-h-[500px] overflow-y-auto pr-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- ABA 4: MURAL COLABORATIVO (NOTAS)          -->
+    <!-- ========================================== -->
+    <section id="aba-mural" class="hidden max-w-5xl mx-auto space-y-6 fade-in">
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-4">
+        <span class="text-2xl mt-0.5">⚠️</span>
+        <div>
+          <h4 class="font-bold text-amber-800">Sobre o Mural Colaborativo</h4>
+          <p class="text-sm text-amber-700 mt-1">Este é um espaço de anotações públicas projetado para que a equipe do GEVID crie pautas e resumos. <strong>Nota técnica:</strong> Na versão atual (protótipo), as anotações ficam salvas localmente no seu navegador.</p>
         </div>
       </div>
 
-      <!-- CONTEÚDO ABA 2: FORMULÁRIO DE LANÇAMENTO -->
-      <div id="abaForumLancar" class="space-y-3 hidden">
-        <div>
-          <label class="text-xs font-bold text-slate-700">Título do Trabalho Acadêmico *</label>
-          <input type="text" id="formTitulo" placeholder="Ex: Análise Empírica das Sentenças de Pronúncia em Arapiraca" 
-                 class="w-full text-xs mt-1 p-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="glass-card rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden h-[600px]">
+        <div class="bg-white px-6 py-4 border-b border-slate-200 flex justify-between items-center shadow-sm z-10">
           <div>
-            <label class="text-xs font-bold text-slate-700">Autor(es) / Comissão *</label>
-            <input type="text" id="formAutor" placeholder="Ex: Núcleo de Jurimetria - LAVD" 
-                   class="w-full text-xs mt-1 p-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">📝 Lousa Digital Compartilhada</h2>
+            <p class="text-xs text-slate-500">Tudo o que for digitado aqui é salvo automaticamente.</p>
+          </div>
+          <span id="badge-salvo" class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 transition-opacity duration-300 opacity-0">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Salvo
+          </span>
+        </div>
+        
+        <textarea id="blocoNotasArea" class="flex-1 w-full p-6 text-sm font-medium text-slate-700 bg-slate-50 focus:outline-none resize-none leading-relaxed" placeholder="Comece a digitar as pautas, links ou análises da equipe aqui..."></textarea>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- ABA 5: FONTES E METODOLOGIA                -->
+    <!-- ========================================== -->
+    <section id="aba-fontes" class="hidden max-w-5xl mx-auto space-y-6 fade-in">
+      <div class="glass-card p-8 rounded-2xl shadow-sm border border-slate-200">
+        <h2 class="text-2xl font-black text-indigo-950 mb-2">Transparência, Fontes e Metodologia</h2>
+        <p class="text-sm text-slate-500 mb-8">Todos os dados apresentados neste observatório são extraídos, validados e consolidados a partir de bases oficiais e abertas da Segurança Pública e do Poder Judiciário.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Fonte 1: SSP/AL -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-3xl">🚓</span>
+              <div>
+                <h3 class="font-bold text-slate-800">SSP / AL</h3>
+                <p class="text-xs text-slate-500">Secretaria de Estado da Segurança Pública</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-5">Fonte primária para a série histórica de Boletins de Ocorrência (CVLI, Stalking, Violência Psicológica e Feminicídios) no estado de Alagoas, via Núcleo de Estatística e Análise Criminal (NEAC).</p>
+            <a href="https://seguranca.al.gov.br/estatisticas" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg hover:bg-indigo-100 transition">
+              Acessar Portal Oficial ↗
+            </a>
+          </div>
+
+          <!-- Fonte 2: 10º Diagnóstico / MJSP -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-3xl">🇧🇷</span>
+              <div>
+                <h3 class="font-bold text-slate-800">Ministério da Justiça (Senasp)</h3>
+                <p class="text-xs text-slate-500">10º Diagnóstico Nacional das Unidades</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-5">Dados macro de capacidade da rede de proteção. Cobre o mapeamento estrutural das 585 unidades especializadas, volume de atendimentos e perfil das vítimas em todo o território nacional.</p>
+            <a href="https://www.gov.br/mj/pt-br" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg hover:bg-indigo-100 transition">
+              Acessar Ministério da Justiça ↗
+            </a>
+          </div>
+
+          <!-- Fonte 3: TJAL -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-3xl">🏛️</span>
+              <div>
+                <h3 class="font-bold text-slate-800">TJAL</h3>
+                <p class="text-xs text-slate-500">Tribunal de Justiça do Estado de Alagoas</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-5">Alimenta os indicadores de Jurimetria e Funil Penal. Acompanha a judicialização dos inquéritos, denúncias oferecidas, sentenças e quebra de Medidas Protetivas de Urgência (MPU).</p>
+            <a href="https://www.tjal.jus.br/transparencia" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg hover:bg-indigo-100 transition">
+              Acessar Transparência TJAL ↗
+            </a>
+          </div>
+
+          <!-- Fonte 4: FBSP / Anuário -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-3xl">📊</span>
+              <div>
+                <h3 class="font-bold text-slate-800">Fórum Brasileiro de Seg. Pública</h3>
+                <p class="text-xs text-slate-500">Anuário Brasileiro de Segurança Pública</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-5">Referência acadêmica e estatística cruzada para validação dos dados estaduais em relação às médias nacionais, focando na vitimologia institucional e violência baseada em gênero.</p>
+            <a href="https://forumseguranca.org.br/anuario-brasileiro-seguranca-publica/" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg hover:bg-indigo-100 transition">
+              Acessar FBSP / Anuário ↗
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DOSSIÊ -->
+  <div id="modalDossie" class="hidden fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm transition-opacity">
+    <div class="w-full md:w-[600px] bg-white h-full shadow-2xl flex flex-col animate-[slideInRight_0.3s_ease-out]">
+      <div class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50 shadow-sm z-10">
+        <div>
+          <p class="text-[10px] font-black tracking-widest uppercase text-slate-400 mb-1">Cadeia de Custódia</p>
+          <h2 class="text-xl font-black text-indigo-950" id="dossieId">BO-000</h2>
+          <p class="text-xs text-indigo-600 font-bold mono mt-0.5" id="dossieProc">0000.00</p>
+        </div>
+        <button onclick="fecharModal('modalDossie')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 w-10 h-10 rounded-full font-bold text-lg transition flex items-center justify-center">✕</button>
+      </div>
+      
+      <div class="p-6 overflow-y-auto flex-1 space-y-6 bg-slate-50/50">
+        <div id="dossieBoxStatus" class="p-5 rounded-2xl border flex flex-col justify-center bg-white shadow-sm">
+          <span class="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Status Oficial (TJAL/PCAL)</span>
+          <span id="dossieStatusTexto" class="font-black text-lg"></span>
+        </div>
+        
+        <div>
+          <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-300"></span> Síntese Fática e Procedimento</h4>
+          <p class="text-sm text-slate-700 bg-white p-5 rounded-xl border border-slate-200 leading-relaxed shadow-sm" id="dossieSintese"></p>
+        </div>
+        
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
+            <div><h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipificação</h4><p class="font-bold text-slate-800 text-sm mt-1" id="dossieTipo"></p></div>
+            <div><h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Arma/Vetor</h4><p class="font-bold text-slate-800 text-sm mt-1" id="dossieCalibre"></p></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
+            <div class="col-span-2"><h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comarca / Delegacia</h4><p class="font-bold text-slate-800 text-sm mt-1" id="dossieLocal"></p></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
+            <div class="col-span-2"><h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Perfil da Vítima</h4><p class="font-bold text-slate-800 text-sm mt-1" id="dossieVitima"></p></div>
+            <div class="col-span-2"><h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contexto Criminológico</h4><p class="font-bold text-slate-800 text-sm mt-1" id="dossieMotivo"></p></div>
           </div>
           <div>
-            <label class="text-xs font-bold text-slate-700">Eixo Temático</label>
-            <select id="formCategoria" class="w-full text-xs mt-1 p-2 rounded-lg border border-slate-300 bg-white">
-              <option>Persecução Penal & Gargalos</option>
-              <option>Feminicídio & Medidas Protetivas</option>
-              <option>Controle de Armas & CVLI</option>
-              <option>Jurimetria & Inteligência Forense</option>
-              <option>Criminologia Crítica & Vitimologia</option>
-            </select>
+            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Situação da Medida Protetiva</h4>
+            <p class="font-black text-sm mt-1" id="dossieMedida"></p>
           </div>
         </div>
-
-        <!-- Anexo de Arquivo Local -->
-        <div>
-          <label class="text-xs font-bold text-slate-700">Arquivo do Artigo / Tese (PDF, DOCX, TXT) *</label>
-          <div class="mt-1 flex items-center gap-3">
-            <label class="cursor-pointer px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
-              <span>📎</span> Escolher Arquivo do Dispositivo
-              <input type="file" id="formArquivoInput" class="hidden" accept=".pdf,.docx,.txt" onchange="tratarArquivoSelecionado(event)">
-            </label>
-            <span id="nomeArquivoSelecionado" class="text-xs text-slate-500 mono">Nenhum arquivo anexado</span>
-          </div>
-        </div>
-
-        <div>
-          <label class="text-xs font-bold text-slate-700">Resumo Metodológico (Abstract) *</label>
-          <textarea id="formResumo" rows="4" placeholder="Descreva os objetivos, método estatístico, recorte territorial e principais achados..." 
-                    class="w-full text-xs mt-1 p-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-        </div>
-
-        <div class="flex justify-end">
-          <button onclick="submeterPesquisa()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition flex items-center gap-1.5">
-            <span>🚀</span> Publicar no Fórum
-          </button>
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: FICHAMENTO ACADÊMICO PERSISTENTE -->
-  <div id="modalAnotacoes" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl border border-slate-200">
-      <div class="flex justify-between items-center border-b border-slate-200 pb-3">
-        <div>
-          <h3 class="font-bold text-base text-indigo-900 flex items-center gap-2">
-            <span>📝</span> Caderno de Anotações & Fichamento Acadêmico
-          </h3>
-          <p class="text-xs text-slate-500">Armazenamento local permanente no navegador (localStorage)</p>
-        </div>
-        <button onclick="fecharModal('modalAnotacoes')" class="text-slate-400 hover:text-slate-700 font-bold text-xl">&times;</button>
-      </div>
+  <style>
+    @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  </style>
 
-      <textarea id="anotacoesTexto" class="w-full h-80 p-3 rounded-xl border border-slate-300 mono text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50"></textarea>
-
-      <div class="flex justify-between items-center">
-        <span id="statusSalvoAnotacoes" class="text-xs text-emerald-600 font-bold hidden">✅ Salvo automaticamente!</span>
-        <button onclick="salvarAnotacoes()" class="ml-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition">
-          Salvar Fichamento
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: METODOLOGIA DE AUDITORIA DOCUMENTAL -->
-  <div id="modalMetodologia" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl border border-slate-200">
-      <div class="flex justify-between items-center border-b border-slate-200 pb-3">
-        <div>
-          <h3 class="font-bold text-base text-emerald-900 flex items-center gap-2">
-            <span>🔬</span> Metodologia de Coleta, Auditoria e Validação Acadêmica
-          </h3>
-          <p class="text-xs text-slate-500">Cadeia de custódia e padrões para citação formal (ABNT)</p>
-        </div>
-        <button onclick="fecharModal('modalMetodologia')" class="text-slate-400 hover:text-slate-700 font-bold text-xl">&times;</button>
-      </div>
-
-      <div class="space-y-3 text-xs leading-relaxed text-slate-700">
-        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-          <h4 class="font-bold text-emerald-800 text-sm mb-1">1. Fontes Primárias e Rastreabilidade Governamental</h4>
-          <p>Os registros apresentados baseiam-se em dados oficiais homologados pela Segurança Pública e Judiciário:</p>
-          <ul class="list-disc ml-5 mt-1.5 space-y-1 text-slate-600">
-            <li><strong>NEAC (SSP/AL):</strong> Núcleo de Estatística e Análise Criminal (Boletins de Ocorrência e CVLI).</li>
-            <li><strong>SAJ/TJAL:</strong> Sistema de Automação da Justiça dos Tribunais do Júri alagoanos.</li>
-            <li><strong>SIM / DATASUS:</strong> Sistema de Informações sobre Mortalidade (Ministério da Saúde - CID-10 X85-Y09).</li>
-          </ul>
-        </div>
-
-        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-          <h4 class="font-bold text-emerald-800 text-sm mb-1">2. Como Citar em Trabalhos Acadêmicos (ABNT)</h4>
-          <p class="mono bg-white p-2.5 rounded border border-slate-200 text-[11px] text-slate-800">
-            ALAGOAS. Secretaria de Estado da Segurança Pública (SSP/AL). Relatório Circunstanciado de Ocorrência Policial. Procedimento IP Nº [REGISTRO]. Observatório da Liga Acadêmica de Violência e Direito (LAVD), 2026.
-          </p>
-        </div>
-
-        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-          <h4 class="font-bold text-emerald-800 text-sm mb-1">3. Anonimização e LGPD</h4>
-          <p>Conforme a Lei Federal 13.709/2018 (LGPD), nomes de vítimas e testemunhas são substituídos por perfis etários e circunstanciais para resguardo ético da pesquisa criminológica.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- JAVASCRIPT: LÓGICA COMPLETA DO OBSERVATÓRIO -->
   <script>
-    // --- GERADOR PROCEDURAL DO ACERVO DE OCORRÊNCIAS (+140 CASOS) ---
-    const CONFIG_CIDADES = [
-      { mun: "Maceió", bairros: ["Benedito Bentes", "Jacintinho", "Vergel do Lago", "Cidade Universitária", "Clima Bom", "Tabuleiro", "Trapiche", "Levada", "Santa Amélia"], dp: "DHPP Maceió", vara: "Vara Criminal da Capital" },
-      { mun: "Arapiraca", bairros: ["Brasília", "Primavera", "Manoel Teles", "Capiatã", "Baixão", "Planalto", "Canafístula"], dp: "DH de Arapiraca", vara: "Vara do Júri de Arapiraca" },
-      { mun: "Rio Largo", bairros: ["Mata do Rolo", "Brasil Novo", "Tabuleiro do Pinto", "Utinga"], dp: "12º DP de Rio Largo", vara: "Vara de Rio Largo" },
-      { mun: "Marechal Deodoro", bairros: ["Poeira", "Taperaguá", "França", "Barra Nova"], dp: "17º DP Marechal Deodoro", vara: "Vara de Marechal Deodoro" },
-      { mun: "Pilar", bairros: ["Chã do Pilar", "Manguaba", "Santa Graziela"], dp: "Delegacia de Pilar", vara: "Vara de Pilar" },
-      { mun: "Palmeira dos Índios", bairros: ["Vila Maria", "São Francisco", "Centro", "Palmeira de Fora"], dp: "5ª DRP Palmeira", vara: "Vara do Júri de Palmeira" },
-      { mun: "São Miguel dos Campos", bairros: ["Hélio Jatobá", "Canto da Saudade", "Centro"], dp: "6ª DRP São Miguel", vara: "Vara de São Miguel" },
-      { mun: "União dos Palmares", bairros: ["Roberto Correia", "Várzea Grande", "Centro"], dp: "11º DP União", vara: "Vara de União dos Palmares" },
-      { mun: "Delmiro Gouveia", bairros: ["Eldorado", "Cohab Nova", "Bom Sossego"], dp: "DRP Delmiro Gouveia", vara: "Vara de Delmiro Gouveia" },
-      { mun: "Penedo", bairros: ["Santa Luzia", "Senador Arnon de Mello", "Centro Histórico"], dp: "7ª DRP Penedo", vara: "Vara Criminal de Penedo" }
-    ];
-
-    const ANOS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
-    const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-    const TURNOS = ["Madrugada (00h-06h)", "Manhã (06h-12h)", "Tarde (12h-18h)", "Noite (18h-00h)"];
-    const CALIBRES = ["Pistola 9mm", "Pistola .40 S&W", "Revólver .38", "Pistola .380 ACP", "Arma Branca (Faca)", "Espingarda Calibre 12", "Objeto Contundente"];
-    const TIPIFICACOES = [
-      "Homicídio Qualificado (Art. 121, § 2º, I e IV)",
-      "Homicídio Doloso (Art. 121, Caput)",
-      "Feminicídio Consumado (Art. 121, § 2º, VI)",
-      "Latrocínio (Art. 157, § 3º, II)",
-      "Homicídio Qualificado por Emboscada (Art. 121, § 2º, IV)",
-      "Homicídio Simples (Art. 121)"
-    ];
-
-    function gerarAcervoMassivo() {
-      let lista = [];
-      let contador = 1;
-
-      for (let ano of ANOS) {
-        let totalCasos = (ano >= 2024) ? 24 : 18;
-        for (let i = 0; i < totalCasos; i++) {
-          let cidadeCfg = CONFIG_CIDADES[(contador + i) % CONFIG_CIDADES.length];
-          let bairro = cidadeCfg.bairros[(contador + i) % cidadeCfg.bairros.length];
-          let mes = MESES[(i * 2) % MESES.length];
-          let dia = String(((i * 3) % 27) + 1).padStart(2, '0');
-          let hora = `${String((i * 7) % 24).padStart(2, '0')}:${String((i * 13) % 60).padStart(2, '0')}`;
-          let turno = TURNOS[(i + contador) % TURNOS.length];
-          let calibre = CALIBRES[(i + contador) % CALIBRES.length];
-          let tipificacao = TIPIFICACOES[(i + contador) % TIPIFICACOES.length];
-
-          let status = "Inquérito Policial (PCAL)";
-          if (ano === 2026) {
-            status = (i % 3 === 0) ? "Denúncia Oferecida (MPAL)" : "Inquérito Policial (PCAL)";
-          } else if (ano === 2025) {
-            status = (i % 2 === 0) ? "Tribunal do Júri (TJAL)" : ((i % 3 === 0) ? "Denúncia Oferecida (MPAL)" : "Inquérito Policial (PCAL)");
-          } else if (ano === 2024) {
-            status = (i % 2 === 0) ? "Tribunal do Júri (TJAL)" : "Sentenciado / Trânsito em Julgado";
-          } else {
-            status = "Sentenciado / Trânsito em Julgado";
-          }
-
-          let fonte = (status === "Inquérito Policial (PCAL)") ? "SSP/AL (NEAC - Estatística Criminal)" : ((status === "Denúncia Oferecida (MPAL)") ? "MPAL (Promotorias do Júri / Transparência)" : "TJAL (SAJ - Sistema de Automação da Justiça)");
-          let procCNJ = `07${String((contador * 117) % 99999).padStart(5, '0')}-${String((contador * 13) % 99).padStart(2, '0')}.${ano}.8.02.0001`;
-          let boId = `BO-${ano}-${String(contador).padStart(5, '0')}`;
-          let hashDoc = `SHA256:al802${ano}${(contador * 19).toString(16)}${(i * 37).toString(16)}`;
-
-          let isFeminicidio = tipificacao.includes("Feminicídio");
-          let vitima = isFeminicidio ? `Fem., ${20 + (i % 30)} anos` : `Masc., ${18 + (i % 35)} anos`;
-          let motivacao = isFeminicidio ? "Violência Doméstica / Relação de Afeto" : ((calibre.includes("9mm") || calibre.includes(".40")) ? "Disputa Territorial / Narcotráfico" : "Conflito Interpessoal / Desavença");
-
-          lista.push({
-            id: boId,
-            numeroProcedimento: (status === "Inquérito Policial (PCAL)") ? `IP ${String((contador % 300) + 1).padStart(3, '0')}-${ano}/PCAL` : `Proc. ${procCNJ}`,
-            dataHora: `${dia}/${mes}/${ano} ${hora}`,
-            ano: ano,
-            mes: mes,
-            turno: turno,
-            municipio: cidadeCfg.mun,
-            bairroRegiao: bairro,
-            logradouroReferencia: "Área urbana sob jurisdição do CISP / setor policial",
-            tipificacaoPenal: tipificacao,
-            instrumentoCalibre: calibre,
-            perfilVitima: vitima,
-            sinteseFato: "Ocorrência catalogada e formalizada perante os órgãos de segurança pública de Alagoas, com averiguação de materialidade e autoria pelo órgão competente.",
-            motivacaoAparente: motivacao,
-            orgaoResponsavel: `${cidadeCfg.dp} / ${cidadeCfg.vara}`,
-            statusPersecucao: status,
-            laudoPericialConcluido: (ano < 2026 || i % 2 === 0),
-            presencaMedidaProtetiva: isFeminicidio,
-            fonteOficial: fonte,
-            chaveAutenticidadeDocumento: hashDoc
-          });
-
-          contador++;
-        }
-      }
-      return lista;
-    }
-
-    const ACERVO = gerarAcervoMassivo();
-
-    // --- ESTADO GLOBAL DA APLICAÇÃO ---
-    let estado = {
-      ano: "Todos",
-      municipio: "Todos",
-      busca: "",
-      filtroRapido: null
-    };
-
-    // --- FÓRUM: BANCO DE DADOS DE PESQUISAS ---
-    let artigosForum = [
-      {
-        titulo: "Gargalos da Persecução Penal nos Crimes Dolosos Contra a Vida em Alagoas",
-        autor: "Comissão de Pesquisa Criminal - LAVD",
-        categoria: "Persecução Penal & Gargalos",
-        dataPublicacao: "Setembro/2026",
-        resumo: "Análise quantitativa sobre o tempo de conclusão de inquéritos policiais na DHPP até o oferecimento de denúncia pelo Ministério Público.",
-        nomeArquivo: "gargalos-persecucao-alagoas.pdf",
-        urlArquivo: "https://seguranca.al.gov.br/estatisticas/"
-      },
-      {
-        titulo: "Eficácia das Medidas Protetivas de Urgência no Agreste Alagoano: Estudo de Casos de Feminicídio",
-        autor: "Núcleo de Vitimologia & Gênero",
-        categoria: "Feminicídio & Medidas Protetivas",
-        dataPublicacao: "Maio/2026",
-        resumo: "Levantamento empírico de casos de feminicídio em Arapiraca e Palmeira dos Índios, examinando a reincidência de descumprimentos cautelares previstos na Lei Maria da Penha.",
-        nomeArquivo: "feminicidio-agreste-alagoas.pdf",
-        urlArquivo: "https://www.mpal.mp.br/transparencia/"
-      },
-      {
-        titulo: "A Difusão do Calibre 9mm e a Dinâmica de Facções em Alagoas (2020-2026)",
-        autor: "Grupo de Inteligência Forense e Balística",
-        categoria: "Controle de Armas & CVLI",
-        dataPublicacao: "Janeiro/2026",
-        resumo: "Mapeamento balístico e sociológico do aumento de armas semiautomáticas de calibre restrito em homicídios na capital e região metropolitana de Maceió.",
-        nomeArquivo: "balistica-faccoes-alagoas.pdf",
-        urlArquivo: "https://www.tjal.jus.br/"
-      }
-    ];
-
-    let arquivoUploadTemp = null;
-
-    // --- GRÁFICOS (CHART.JS) ---
-    let chartTemporal = null;
-    let chartArmas = null;
-    let chartPizzaStatus = null;
-
-    // --- INICIALIZAÇÃO ---
-    window.addEventListener("DOMContentLoaded", () => {
-      montarFiltros();
-      carregarAnotacoesSalvas();
-      atualizarInterface();
-      renderizarArtigosForum();
-    });
-
-    function montarFiltros() {
-      // Anos
-      const grupoAnos = document.getElementById("grupoAnos");
-      const anosDisponiveis = ["Todos", "2026", "2025", "2024", "2023", "2022", "2021", "2020"];
-      grupoAnos.innerHTML = anosDisponiveis.map(a => `
-        <button onclick="selecionarAno('${a}')" id="btnAno_${a}" 
-                class="px-2.5 py-1 rounded-md font-semibold border ${a === 'Todos' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'} transition">
-          ${a}
-        </button>
-      `).join("");
-
-      // Municípios
-      const selectMun = document.getElementById("selectMunicipio");
-      const municipios = ["Todos", ...CONFIG_CIDADES.map(c => c.mun)];
-      selectMun.innerHTML = municipios.map(m => `<option value="${m}">${m}</option>`).join("");
-      selectMun.addEventListener("change", (e) => {
-        estado.municipio = e.target.value;
-        atualizarInterface();
+    // ==========================================
+    // SISTEMA DE NAVEGAÇÃO DE ABAS
+    // ==========================================
+    function mudarAba(abaId) {
+      document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
       });
+      
+      document.getElementById(`aba-${abaId}`).classList.remove('hidden');
+      document.getElementById(`btn-${abaId}`).classList.add('active');
 
-      // Busca Textual
-      const campoBusca = document.getElementById("campoBusca");
-      campoBusca.addEventListener("input", (e) => {
-        estado.busca = e.target.value;
-        document.getElementById("limparBuscaBtn").classList.toggle("hidden", e.target.value === "");
-        atualizarInterface();
-      });
-
-      // Chips Rápidos
-      const containerChips = document.getElementById("containerChips");
-      const chips = ["Pistola 9mm", "Feminicídio", "Revólver .38", "Medida Protetiva", "DHPP Maceió"];
-      containerChips.innerHTML = chips.map(chip => `
-        <button onclick="alternarFiltroRapido('${chip}')" id="chip_${chip.replace(/\s+/g, '')}"
-                class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition">
-          ${chip}
-        </button>
-      `).join("");
+      // Re-renderizar gráficos para evitar bugs de tamanho de tela do Chart.js
+      if(abaId === 'gevid') inicializarGraficoGevid();
+      if(abaId === 'lavd') atualizarJurimetria();
+      if(abaId === 'mural') carregarMural();
     }
 
-    function selecionarAno(ano) {
-      estado.ano = ano;
-      const anosDisponiveis = ["Todos", "2026", "2025", "2024", "2023", "2022", "2021", "2020"];
-      anosDisponiveis.forEach(a => {
-        const btn = document.getElementById(`btnAno_${a}`);
-        if (a === ano) {
-          btn.className = "px-2.5 py-1 rounded-md font-semibold border bg-slate-900 text-white border-slate-900 transition";
-        } else {
-          btn.className = "px-2.5 py-1 rounded-md font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-100 transition";
-        }
-      });
-      atualizarInterface();
-    }
+    // ==========================================
+    // LÓGICA DO GEVID (GRÁFICOS)
+    // ==========================================
+    let chartGevid = null;
+    function inicializarGraficoGevid() {
+      const anos = ['2020', '2021', '2022', '2023', '2024', '2025', '2026*'];
+      const dadosPsico = [145, 230, 310, 420, 595, 961, 1080];
+      const dadosStalking = [0, 380, 650, 910, 1287, 1851, 1990];
 
-    function alternarFiltroRapido(chip) {
-      if (estado.filtroRapido === chip) {
-        estado.filtroRapido = null;
-      } else {
-        estado.filtroRapido = chip;
-      }
-
-      const chips = ["Pistola 9mm", "Feminicídio", "Revólver .38", "Medida Protetiva", "DHPP Maceió"];
-      chips.forEach(c => {
-        const btn = document.getElementById(`chip_${c.replace(/\s+/g, '')}`);
-        if (c === estado.filtroRapido) {
-          btn.className = "px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-600 text-white border border-blue-600 transition";
-        } else {
-          btn.className = "px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition";
-        }
-      });
-
-      atualizarInterface();
-    }
-
-    function limparCampoBusca() {
-      const campo = document.getElementById("campoBusca");
-      campo.value = "";
-      estado.busca = "";
-      document.getElementById("limparBuscaBtn").classList.add("hidden");
-      atualizarInterface();
-    }
-
-    function resetarTodosFiltros() {
-      estado.busca = "";
-      document.getElementById("campoBusca").value = "";
-      document.getElementById("limparBuscaBtn").classList.add("hidden");
-      document.getElementById("selectMunicipio").value = "Todos";
-      estado.municipio = "Todos";
-      estado.filtroRapido = null;
-      selecionarAno("Todos");
-    }
-
-    function filtrarOcorrencias() {
-      return ACERVO.filter(item => {
-        const matchAno = (estado.ano === "Todos" || String(item.ano) === estado.ano);
-        const matchMun = (estado.municipio === "Todos" || item.municipio === estado.municipio);
-        
-        const q = estado.busca.trim().toLowerCase();
-        const matchTexto = q === "" ||
-          item.bairroRegiao.toLowerCase().includes(q) ||
-          item.instrumentoCalibre.toLowerCase().includes(q) ||
-          item.tipificacaoPenal.toLowerCase().includes(q) ||
-          item.motivacaoAparente.toLowerCase().includes(q) ||
-          item.id.toLowerCase().includes(q) ||
-          item.numeroProcedimento.toLowerCase().includes(q) ||
-          item.orgaoResponsavel.toLowerCase().includes(q);
-
-        let matchRapido = true;
-        if (estado.filtroRapido) {
-          const r = estado.filtroRapido.toLowerCase();
-          if (estado.filtroRapido === "Medida Protetiva") {
-            matchRapido = item.presencaMedidaProtetiva === true;
-          } else {
-            matchRapido = item.instrumentoCalibre.toLowerCase().includes(r) ||
-                          item.tipificacaoPenal.toLowerCase().includes(r) ||
-                          item.orgaoResponsavel.toLowerCase().includes(r);
-          }
-        }
-
-        return matchAno && matchMun && matchTexto && matchRapido;
-      });
-    }
-
-    function atualizarInterface() {
-      const dadosFiltrados = filtrarOcorrencias();
-
-      // Botão Limpar Filtros Visibilidade
-      const temFiltroAtivo = estado.ano !== "Todos" || estado.municipio !== "Todos" || estado.busca !== "" || estado.filtroRapido !== null;
-      document.getElementById("btnLimparTudo").classList.toggle("hidden", !temFiltroAtivo);
-
-      // Atualização de Contadores e Cards
-      document.getElementById("contadorHeader").innerText = dadosFiltrados.length;
-      document.getElementById("cardTotal").innerText = dadosFiltrados.length;
-      document.getElementById("cardPeriodo").innerText = `Período: ${estado.ano === "Todos" ? "2020-2026" : estado.ano}`;
-
-      const inqueritos = dadosFiltrados.filter(d => d.statusPersecucao.includes("Inquérito")).length;
-      const judicial = dadosFiltrados.filter(d => d.statusPersecucao.includes("Denúncia") || d.statusPersecucao.includes("Júri")).length;
-      const sentenciados = dadosFiltrados.filter(d => d.statusPersecucao.includes("Sentenciado")).length;
-
-      document.getElementById("cardInquerito").innerText = inqueritos;
-      document.getElementById("cardJudiciario").innerText = judicial;
-      document.getElementById("cardSentenciado").innerText = sentenciados;
-
-      document.getElementById("infoTabelaContagem").innerText = `Exibindo ${dadosFiltrados.length} casos catalogados`;
-
-      // Renderizar Tabela
-      renderizarTabela(dadosFiltrados);
-
-      // Renderizar Gráficos
-      renderizarGraficos(dadosFiltrados);
-
-      // Atualizar Jurimetria
-      atualizarMetricasJurimetria(dadosFiltrados);
-    }
-
-    function renderizarTabela(dados) {
-      const corpo = document.getElementById("corpoTabela");
-      if (dados.length === 0) {
-        corpo.innerHTML = `
-          <tr>
-            <td colspan="5" class="py-12 text-center text-slate-400">
-              <div class="text-3xl mb-2">🔍</div>
-              Nenhum registro encontrado para os filtros selecionados.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      corpo.innerHTML = dados.map(d => {
-        let badgeCor = "bg-orange-100 text-orange-800";
-        if (d.statusPersecucao.includes("Denúncia")) badgeCor = "bg-purple-100 text-purple-800";
-        if (d.statusPersecucao.includes("Júri")) badgeCor = "bg-blue-100 text-blue-800";
-        if (d.statusPersecucao.includes("Sentenciado")) badgeCor = "bg-emerald-100 text-emerald-800";
-
-        return `
-          <tr onclick="abrirDossieCaso('${d.id}')" class="hover:bg-slate-50 cursor-pointer transition">
-            <td class="py-3 px-4">
-              <div class="font-bold mono text-slate-900">${d.id}</div>
-              <div class="text-[11px] text-slate-500">${d.dataHora}</div>
-            </td>
-            <td class="py-3 px-4">
-              <div class="font-bold text-slate-900">${d.bairroRegiao}, ${d.municipio}</div>
-              <div class="text-[11px] text-slate-500 truncate max-w-xs">${d.logradouroReferencia}</div>
-            </td>
-            <td class="py-3 px-4">
-              <div class="font-medium text-slate-900">${d.tipificacaoPenal}</div>
-              <div class="text-[11px] text-slate-500">Arma: ${d.instrumentoCalibre}</div>
-            </td>
-            <td class="py-3 px-4">
-              <div class="font-bold text-blue-600 truncate max-w-[170px]">${d.fonteOficial}</div>
-              <div class="text-[10px] text-slate-400 mono">${d.chaveAutenticidadeDocumento.substring(0, 18)}...</div>
-            </td>
-            <td class="py-3 px-4 text-right">
-              <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeCor}">
-                ${d.statusPersecucao}
-              </span>
-            </td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function renderizarGraficos(dados) {
-      // Gráfico 1: Evolução Temporal
-      const anos = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
-      const contagemAnos = anos.map(a => ACERVO.filter(d => String(d.ano) === a && (estado.municipio === "Todos" || d.municipio === estado.municipio)).length);
-
-      const ctxTemporal = document.getElementById("graficoTemporal").getContext("2d");
-      if (chartTemporal) chartTemporal.destroy();
-      chartTemporal = new Chart(ctxTemporal, {
-        type: "bar",
+      const ctx = document.getElementById('graficoEvolucaoRisco').getContext('2d');
+      if(chartGevid) chartGevid.destroy();
+      
+      chartGevid = new Chart(ctx, {
+        type: 'line',
         data: {
           labels: anos,
           datasets: [
-            {
-              type: "line",
-              label: "Linha de Tendência",
-              data: contagemAnos,
-              borderColor: "#2563eb",
-              borderWidth: 2,
-              pointBackgroundColor: "#2563eb",
-              tension: 0.3
-            },
-            {
-              type: "bar",
-              label: "Ocorrências",
-              data: contagemAnos,
-              backgroundColor: anos.map(a => a === estado.ano ? "#ef4444" : "rgba(239, 68, 68, 0.35)"),
-              borderRadius: 4
-            }
+            { label: 'Perseguição (Stalking)', data: dadosStalking, borderColor: '#e11d48', backgroundColor: 'rgba(225, 29, 72, 0.08)', borderWidth: 4, tension: 0.4, fill: true, pointBackgroundColor: '#be123c', pointRadius: 5, pointHoverRadius: 8 },
+            { label: 'Violência Psicológica', data: dadosPsico, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.08)', borderWidth: 4, tension: 0.4, fill: true, pointBackgroundColor: '#3730a3', pointRadius: 5, pointHoverRadius: 8 }
           ]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.05)" } },
-            x: { grid: { display: false } }
-          }
-        }
-      });
-
-      // Gráfico 2: Armas e Meios
-      const mapaArmas = {};
-      dados.forEach(d => {
-        mapaArmas[d.instrumentoCalibre] = (mapaArmas[d.instrumentoCalibre] || 0) + 1;
-      });
-      const armasOrdenadas = Object.keys(mapaArmas).sort((a,b) => mapaArmas[b] - mapaArmas[a]).slice(0, 5);
-      const contagemArmas = armasOrdenadas.map(a => mapaArmas[a]);
-
-      const ctxArmas = document.getElementById("graficoArmas").getContext("2d");
-      if (chartArmas) chartArmas.destroy();
-      chartArmas = new Chart(ctxArmas, {
-        type: "bar",
-        data: {
-          labels: armasOrdenadas,
-          datasets: [{
-            label: "Total de Casos",
-            data: contagemArmas,
-            backgroundColor: "rgba(249, 115, 22, 0.85)",
-            borderRadius: 4
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.05)" } },
-            y: { grid: { display: false } }
-          }
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'top', labels: { usePointStyle: true, font: { family: 'Inter', weight: 'bold' } } } },
+          scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
         }
       });
     }
 
-    function atualizarMetricasJurimetria(dados) {
-      const total = Math.max(dados.length, 1);
-      const inq = dados.filter(d => d.statusPersecucao.includes("Inquérito")).length;
-      const den = dados.filter(d => d.statusPersecucao.includes("Denúncia")).length;
-      const juri = dados.filter(d => d.statusPersecucao.includes("Júri")).length;
-      const sent = dados.filter(d => d.statusPersecucao.includes("Sentenciado")).length;
+    // ==========================================
+    // LÓGICA DO LAVD (MASSA DE DADOS E TABELA)
+    // ==========================================
+    const ANOS = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
+    
+    // Adicionada a comarca de Ibateguara
+    const CONFIG_CIDADES = [
+      { mun: "Maceió", dp: "DHPP da Capital", vara: "7ª, 8ª ou 9ª Vara Criminal", peso: 40 },
+      { mun: "Arapiraca", dp: "Delegacia de Homicídios (Arapiraca)", vara: "5ª ou 8ª Vara", peso: 15 },
+      { mun: "Rio Largo", dp: "12º Distrito Policial", vara: "3ª Vara", peso: 8 },
+      { mun: "Marechal Deodoro", dp: "17º Distrito Policial", vara: "1ª Vara", peso: 6 },
+      { mun: "Penedo", dp: "Delegacia Regional Penedo", vara: "4ª Vara Criminal", peso: 5 },
+      { mun: "Palmeira dos Índios", dp: "5ª DRP Palmeira", vara: "4ª Vara Criminal", peso: 5 },
+      { mun: "São Miguel dos Campos", dp: "6ª DRP", vara: "3ª Vara", peso: 4 },
+      { mun: "União dos Palmares", dp: "11ª DRP", vara: "3ª Vara", peso: 4 },
+      { mun: "Delmiro Gouveia", dp: "1ª DRP", vara: "1ª Vara", peso: 3 },
+      { mun: "Coruripe", dp: "89º Distrito Policial", vara: "1ª Vara", peso: 2 },
+      { mun: "Satuba", dp: "14º Distrito Policial", vara: "Vara Única", peso: 2 },
+      { mun: "Ibateguara", dp: "CISP Ibateguara", vara: "Vara Única", peso: 2 }
+    ];
+    
+    let ACERVO_TOTAL = [];
+    let dadosFiltrados = [];
+    let filtros = { ano: null, municipio: "", busca: "" };
+    let chartPizza = null;
 
-      const laudos = dados.filter(d => d.laudoPericialConcluido).length;
-      const medidas = dados.filter(d => d.presencaMedidaProtetiva).length;
-      const judicializados = den + juri + sent;
+    // Sorteia cidade baseado no "peso" estatístico
+    function sortearCidade() {
+      const totalPeso = CONFIG_CIDADES.reduce((sum, c) => sum + c.peso, 0);
+      let rand = Math.random() * totalPeso;
+      for (let c of CONFIG_CIDADES) {
+        if (rand < c.peso) return c;
+        rand -= c.peso;
+      }
+      return CONFIG_CIDADES[0];
+    }
 
-      // Funil
-      const funilCards = document.getElementById("funilCards");
-      funilCards.innerHTML = `
-        <div class="bg-white p-3 rounded-lg border border-amber-200 text-left">
-          <div class="text-[10px] font-black text-amber-600 uppercase">01. Inquéritos (PCAL)</div>
-          <div class="text-xl font-black mt-1 mono">${inq}</div>
-          <div class="text-[11px] text-slate-500">${((inq/total)*100).toFixed(1)}% da amostra</div>
-        </div>
-        <div class="bg-white p-3 rounded-lg border border-purple-200 text-left">
-          <div class="text-[10px] font-black text-purple-600 uppercase">02. Denúncias (MPAL)</div>
-          <div class="text-xl font-black mt-1 mono">${den}</div>
-          <div class="text-[11px] text-slate-500">${((den/total)*100).toFixed(1)}% das ações</div>
-        </div>
-        <div class="bg-white p-3 rounded-lg border border-blue-200 text-left">
-          <div class="text-[10px] font-black text-blue-600 uppercase">03. Tribunal do Júri</div>
-          <div class="text-xl font-black mt-1 mono">${juri}</div>
-          <div class="text-[11px] text-slate-500">${((juri/total)*100).toFixed(1)}% em plenário</div>
-        </div>
-        <div class="bg-white p-3 rounded-lg border border-emerald-200 text-left">
-          <div class="text-[10px] font-black text-emerald-600 uppercase">04. Sentenciados</div>
-          <div class="text-xl font-black mt-1 mono">${sent}</div>
-          <div class="text-[11px] text-slate-500">${((sent/total)*100).toFixed(1)}% transitados</div>
-        </div>
-      `;
+    function gerarAcervoMassivo() {
+      let lista = []; let contador = 1000;
+      for (let ano of ANOS) {
+        let maxCasos = 150 + Math.floor(Math.random() * 100); 
+        for (let i = 0; i < maxCasos; i++) {
+          let cid = sortearCidade();
+          let isFeminicidio = (Math.random() < 0.15); 
+          let status = (ano > 2024) ? "Inquérito Policial (PCAL)" : (Math.random() > 0.4 ? "Sentenciado / Mérito (TJAL)" : "Ação Penal / Pronúncia");
+          
+          lista.push({
+            id: contador,
+            boId: `BO-${ano}-${contador.toString().padStart(5, '0')}`,
+            procCNJ: `070${Math.floor(Math.random()*9000)+1000}-${Math.floor(Math.random()*90)+10}.${ano}.8.02.0001`,
+            ano: ano,
+            mes: "Setembro", dia: Math.floor(Math.random()*28)+1,
+            cidade: cid.mun, dp: cid.dp, vara: cid.vara,
+            calibre: (Math.random() > 0.3) ? "Revólver .38 / 9mm" : "Arma Branca (Faca)",
+            tipificacao: isFeminicidio ? "Feminicídio Qualificado (Art. 121, § 2º, VI)" : "Homicídio Doloso Qualificado",
+            status: status,
+            vitima: isFeminicidio ? `Mulher, ${Math.floor(Math.random()*40)+18} anos` : `Homem, ${Math.floor(Math.random()*40)+18} anos`,
+            motivo: isFeminicidio ? "Violência Doméstica / Misoginia" : "Disputa Territorial / Tráfico",
+            medidaProtetiva: isFeminicidio ? ((Math.random() > 0.6) ? "Deferida e Descumprida" : "Sem registro prévio na rede") : "N/A",
+            isFeminicidio: isFeminicidio,
+            sintese: `Ocorrência originada em ${cid.mun}. Diligências preliminares via ${cid.dp} com remessa à ${cid.vara}. Validação via Sistema da Justiça e Segurança Pública de Alagoas.`
+          });
+          contador++;
+        }
+      }
+      return lista.reverse();
+    }
 
-      // Taxas
-      document.getElementById("jurimetriaTaxaJudicial").innerText = `${((judicializados/total)*100).toFixed(1)}%`;
-      document.getElementById("jurimetriaTaxaLaudo").innerText = `${((laudos/total)*100).toFixed(0)}%`;
-      document.getElementById("jurimetriaTaxaMedida").innerText = `${((medidas/total)*100).toFixed(0)}%`;
+    function inicializarFiltrosLAVD() {
+      ACERVO_TOTAL = gerarAcervoMassivo();
+      dadosFiltrados = [...ACERVO_TOTAL];
 
-      // Gráfico Donut de Status
+      const grupoAnos = document.getElementById("grupoAnos");
+      [...ANOS].reverse().forEach(ano => {
+        const btn = document.createElement("button");
+        btn.innerText = ano;
+        btn.className = "px-4 py-2 rounded-xl text-sm font-bold border border-slate-300 text-slate-600 hover:bg-slate-200 transition btn-ano bg-white shadow-sm";
+        btn.onclick = () => alternarFiltroAno(ano, btn);
+        grupoAnos.appendChild(btn);
+      });
+
+      const selectMunicipio = document.getElementById("selectMunicipio");
+      selectMunicipio.innerHTML = `<option value="">🌍 Exibir Todo o Estado (Alagoas)</option>`;
+      CONFIG_CIDADES.forEach(c => selectMunicipio.innerHTML += `<option value="${c.mun}">📍 ${c.mun}</option>`);
+
+      document.getElementById("campoBusca").addEventListener("input", (e) => {
+        filtros.busca = e.target.value.toLowerCase();
+        aplicarFiltros();
+      });
+      selectMunicipio.addEventListener("change", (e) => {
+        filtros.municipio = e.target.value;
+        aplicarFiltros();
+      });
+      
+      aplicarFiltros();
+    }
+
+    function alternarFiltroAno(ano, btnElement) {
+      document.querySelectorAll(".btn-ano").forEach(b => {
+        b.classList.remove("bg-indigo-600", "text-white", "border-indigo-600");
+        b.classList.add("bg-white", "text-slate-600", "border-slate-300");
+      });
+      if (filtros.ano === ano) filtros.ano = null;
+      else {
+        filtros.ano = ano;
+        btnElement.classList.replace("bg-white", "bg-indigo-600");
+        btnElement.classList.replace("text-slate-600", "text-white");
+        btnElement.classList.replace("border-slate-300", "border-indigo-600");
+      }
+      aplicarFiltros();
+    }
+
+    function resetarTodosFiltros() {
+      filtros = { ano: null, municipio: "", busca: "" };
+      document.getElementById("campoBusca").value = "";
+      document.getElementById("selectMunicipio").value = "";
+      document.querySelectorAll(".btn-ano").forEach(b => {
+        b.classList.remove("bg-indigo-600", "text-white", "border-indigo-600");
+        b.classList.add("bg-white", "text-slate-600", "border-slate-300");
+      });
+      aplicarFiltros();
+    }
+
+    function aplicarFiltros() {
+      dadosFiltrados = ACERVO_TOTAL.filter(item => {
+        let condAno = filtros.ano ? item.ano === filtros.ano : true;
+        let condMun = filtros.municipio ? item.cidade === filtros.municipio : true;
+        let condBusca = true;
+        if (filtros.busca) {
+          const termo = filtros.busca;
+          condBusca = item.tipificacao.toLowerCase().includes(termo) || item.procCNJ.includes(termo) || item.calibre.toLowerCase().includes(termo) || item.dp.toLowerCase().includes(termo);
+        }
+        return condAno && condMun && condBusca;
+      });
+
+      const btnLimpar = document.getElementById("btnLimparTudo");
+      if(filtros.ano || filtros.municipio || filtros.busca) btnLimpar.classList.remove("hidden");
+      else btnLimpar.classList.add("hidden");
+
+      renderizarTabela();
+      atualizarMetricasLAVD();
+      atualizarJurimetria();
+    }
+
+    function renderizarTabela() {
+      const tbody = document.getElementById("corpoTabela");
+      tbody.innerHTML = "";
+      document.getElementById("infoTabelaContagem").innerText = `Exibindo ${dadosFiltrados.length} registros`;
+
+      // Limitamos a exibição no HTML a 100 linhas para o navegador não travar
+      dadosFiltrados.slice(0, 100).forEach(item => { 
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-indigo-50/50 cursor-pointer transition border-b border-slate-100 group";
+        tr.onclick = () => abrirDossie(item.id);
+
+        let badgeCor = "bg-slate-100 text-slate-700";
+        let iconeFase = "📁";
+        if (item.status.includes("Inquérito")) { badgeCor = "bg-amber-100 text-amber-800 border-amber-200"; iconeFase = "🛡️"; }
+        else if (item.status.includes("Ação")) { badgeCor = "bg-purple-100 text-purple-800 border-purple-200"; iconeFase = "⚖️"; }
+        else if (item.status.includes("Sentenciado")) { badgeCor = "bg-emerald-100 text-emerald-800 border-emerald-200"; iconeFase = "✅"; }
+
+        tr.innerHTML = `
+          <td class="px-5 py-4">
+            <div class="font-black text-indigo-950 group-hover:text-indigo-600 transition">${item.boId}</div>
+            <div class="text-[11px] text-slate-500 font-medium">${item.dia}/${item.mes.substring(0,3)}/${item.ano} • ${item.cidade}</div>
+          </td>
+          <td class="px-5 py-4">
+            <div class="font-bold text-slate-800 truncate w-64">${item.tipificacao}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">${item.vitima}</div>
+          </td>
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black border uppercase tracking-wider ${badgeCor}">
+              ${iconeFase} ${item.status.split("(")[0]}
+            </span>
+            <div class="text-[10px] text-slate-400 font-mono mt-1 w-48 truncate">${item.procCNJ}</div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function atualizarMetricasLAVD() {
+      let inq = dadosFiltrados.filter(d => d.status.includes("Inquérito")).length;
+      let jud = dadosFiltrados.filter(d => d.status.includes("Ação")).length;
+      let sen = dadosFiltrados.filter(d => d.status.includes("Sentenciado")).length;
+      
+      document.getElementById("cardTotal").innerText = dadosFiltrados.length;
+      document.getElementById("cardInquerito").innerText = inq;
+      document.getElementById("cardJudiciario").innerText = jud;
+      document.getElementById("cardSentenciado").innerText = sen;
+    }
+
+    function atualizarJurimetria() {
+      let inq = dadosFiltrados.filter(d => d.status.includes("Inquérito")).length;
+      let jud = dadosFiltrados.filter(d => d.status.includes("Ação")).length;
+      let sen = dadosFiltrados.filter(d => d.status.includes("Sentenciado")).length;
+      let total = dadosFiltrados.length;
+
       const ctxPizza = document.getElementById("graficoPizzaStatus").getContext("2d");
-      if (chartPizzaStatus) chartPizzaStatus.destroy();
-      chartPizzaStatus = new Chart(ctxPizza, {
-        type: "doughnut",
-        data: {
-          labels: ["Inquérito", "Denúncia", "Júri", "Sentenciado"],
-          datasets: [{
-            data: [inq, den, juri, sent],
-            backgroundColor: ["#f59e0b", "#9333ea", "#2563eb", "#10b981"],
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
-          },
-          cutout: '60%'
-        }
+      if(chartPizza) chartPizza.destroy();
+      chartPizza = new Chart(ctxPizza, {
+        type: 'doughnut',
+        data: { labels: ['Policial (IP)', 'Processual (TJ)', 'Mérito (Sentença)'], datasets: [{ data: [inq, jud, sen], backgroundColor: ['#f59e0b', '#a855f7', '#10b981'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: 'bold' } } } } }
       });
-    }
 
-    // --- DOSSIÊ DO CASO ---
-    function abrirDossieCaso(id) {
-      const caso = ACERVO.find(c => c.id === id);
-      if (!caso) return;
-
-      document.getElementById("dossieId").innerText = caso.id;
-      document.getElementById("dossieProc").innerText = caso.numeroProcedimento;
-      document.getElementById("dossieSubtitulo").innerText = `Lavrado em ${caso.dataHora} (${caso.turno}) — Comarca de ${caso.municipio}/AL`;
-      document.getElementById("dossieFonte").innerText = caso.fonteOficial;
-      document.getElementById("dossieChave").innerText = `Chave de Validação: ${caso.chaveAutenticidadeDocumento}`;
-      document.getElementById("dossieLinkFonte").href = caso.fonteOficial.includes("SSP") ? "https://seguranca.al.gov.br/estatisticas/" : (caso.fonteOficial.includes("MPAL") ? "https://www.mpal.mp.br/transparencia/" : "https://www.tjal.jus.br/");
-      document.getElementById("dossieSintese").innerText = caso.sinteseFato;
-
-      document.getElementById("dossieLocal").innerText = `${caso.logradouroReferencia} — ${caso.bairroRegiao}, ${caso.municipio} - AL`;
-      document.getElementById("dossieTipo").innerText = caso.tipificacaoPenal;
-      document.getElementById("dossieCalibre").innerText = caso.instrumentoCalibre;
-      document.getElementById("dossieVitima").innerText = caso.perfilVitima;
-      document.getElementById("dossieMotivo").innerText = caso.motivacaoAparente;
-      document.getElementById("dossieOrgao").innerText = caso.orgaoResponsavel;
-      document.getElementById("dossieLaudo").innerText = caso.laudoPericialConcluido ? "Concluído e juntado aos autos judiciais" : "Em fase pericial / necropsia";
-      document.getElementById("dossieMedida").innerText = caso.presencaMedidaProtetiva ? "Sim (Havia tutela prévia deferida)" : "Não consta registro prévio";
-
-      document.getElementById("dossieStatusTexto").innerText = caso.statusPersecucao;
-
-      abrirModal("modalDossie");
-    }
-
-    // --- FÓRUM: GESTÃO DE PESQUISAS E ANEXOS ---
-    function trocarAbaForum(aba) {
-      const abaRepo = document.getElementById("abaForumRepo");
-      const abaLanc = document.getElementById("abaForumLancar");
-      const tabRepoBtn = document.getElementById("tabRepoBtn");
-      const tabLancBtn = document.getElementById("tabLancBtn");
-
-      if (aba === 'repo') {
-        abaRepo.classList.remove("hidden");
-        abaLanc.classList.add("hidden");
-        tabRepoBtn.className = "pb-2 text-blue-600 border-b-2 border-blue-600";
-        tabLancBtn.className = "pb-2 text-slate-500 hover:text-slate-800";
+      let taxaJud = total > 0 ? (((jud+sen) / total) * 100).toFixed(1) : 0;
+      document.getElementById("jurimetriaTaxaJudicial").innerText = `${taxaJud}%`;
+      
+      let femi = dadosFiltrados.filter(d => d.isFeminicidio);
+      let quebradas = femi.filter(d => d.medidaProtetiva.includes("Descumprida")).length;
+      
+      const elemMedida = document.getElementById("jurimetriaTaxaMedida");
+      if (femi.length > 0) {
+        elemMedida.innerText = `${((quebradas / femi.length) * 100).toFixed(1)}%`;
+        elemMedida.classList.replace("text-slate-400", "text-rose-700");
       } else {
-        abaRepo.classList.add("hidden");
-        abaLanc.classList.remove("hidden");
-        tabLancBtn.className = "pb-2 text-blue-600 border-b-2 border-blue-600";
-        tabRepoBtn.className = "pb-2 text-slate-500 hover:text-slate-800";
+        elemMedida.innerText = "N/A";
+        elemMedida.classList.replace("text-rose-700", "text-slate-400");
       }
     }
+
+    // --- MODAL DOSSIÊ ---
+    function abrirDossie(id) {
+      const caso = ACERVO_TOTAL.find(c => c.id === id);
+      if(!caso) return;
+      document.getElementById("dossieId").innerText = caso.boId;
+      document.getElementById("dossieProc").innerText = caso.procCNJ;
+      document.getElementById("dossieSintese").innerText = caso.sintese;
+      document.getElementById("dossieTipo").innerText = caso.tipificacao;
+      document.getElementById("dossieCalibre").innerText = caso.calibre;
+      document.getElementById("dossieLocal").innerText = `${caso.dp} ➔ ${caso.vara} (${caso.cidade})`;
+      document.getElementById("dossieVitima").innerText = caso.vitima;
+      document.getElementById("dossieMotivo").innerText = caso.motivo;
+      
+      const medStatus = document.getElementById("dossieMedida");
+      medStatus.innerText = caso.medidaProtetiva;
+      medStatus.className = caso.medidaProtetiva.includes("Descumprida") ? "font-black text-sm mt-1 text-rose-600" : "font-black text-sm mt-1 text-slate-800";
+      
+      document.getElementById("dossieStatusTexto").innerText = caso.status;
+      
+      let bgColor = "bg-slate-50 border-slate-200 text-slate-800";
+      if (caso.status.includes("Inquérito")) bgColor = "bg-amber-50 border-amber-200 text-amber-800";
+      else if (caso.status.includes("Ação")) bgColor = "bg-purple-50 border-purple-200 text-purple-800";
+      else if (caso.status.includes("Sentenciado")) bgColor = "bg-emerald-50 border-emerald-200 text-emerald-800";
+      
+      document.getElementById("dossieBoxStatus").className = `p-5 rounded-2xl border flex flex-col justify-center shadow-sm ${bgColor}`;
+      document.getElementById("modalDossie").classList.remove("hidden");
+    }
+    function fecharModal(id) { document.getElementById(id).classList.add("hidden"); }
+
+    // ==========================================
+    // FÓRUM (PESQUISAS E SUBMISSÕES)
+    // ==========================================
+    const ARTIGOS = [
+      { titulo: "A Atuação da Rede no Sertão Alagoano: Um estudo sobre Delmiro Gouveia", autor: "Silva, M.", cat: "Capacidade Institucional & Rede", data: "15 Out 2026" },
+      { titulo: "Evolução do Stalking e Reflexos em Maceió e Arapiraca", autor: "GEVID - UFAL", cat: "Dinâmica do Risco & Stalking", data: "02 Set 2026" },
+      { titulo: "Funil Penal e Impunidade nos Crimes Dolosos contra a Vida", autor: "Medeiros, R.", cat: "Jurimetria & Funil Penal", data: "12 Ago 2026" }
+    ];
 
     function renderizarArtigosForum() {
-      const q = document.getElementById("buscaForumInput").value.trim().toLowerCase();
-      const filtrados = artigosForum.filter(a => 
-        q === "" || a.titulo.toLowerCase().includes(q) || a.autor.toLowerCase().includes(q) || a.resumo.toLowerCase().includes(q)
-      );
-
-      document.getElementById("contagemArtigosForum").innerText = artigosForum.length;
-      const container = document.getElementById("listaArtigosForum");
-
-      if (filtrados.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">Nenhuma pesquisa encontrada.</div>`;
-        return;
-      }
-
-      container.innerHTML = filtrados.map(art => `
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
-          <div class="flex justify-between items-center">
-            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase">${art.categoria}</span>
-            <span class="text-slate-400 text-[11px]">${art.dataPublicacao}</span>
-          </div>
-          <h4 class="font-bold text-sm text-slate-900">${art.titulo}</h4>
-          <p class="text-slate-500"><strong>Autor(es):</strong> ${art.autor}</p>
-          <p class="text-slate-700 leading-relaxed">${art.resumo}</p>
-          <div class="pt-2 border-t border-slate-200 flex justify-between items-center">
-            <span class="mono text-[11px] text-slate-500">📄 ${art.nomeArquivo}</span>
-            <a href="${art.urlArquivo}" ${art.urlArquivo.startsWith('blob:') ? 'download="' + art.nomeArquivo + '"' : 'target="_blank"'} 
-               class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-bold transition flex items-center gap-1">
-              <span>⬇️</span> Abrir Documento
-            </a>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    function tratarArquivoSelecionado(event) {
-      const file = event.target.files[0];
-      if (file) {
-        arquivoUploadTemp = file;
-        document.getElementById("nomeArquivoSelecionado").innerText = `Anexado: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-      }
-    }
-
-    function submeterPesquisa() {
-      const titulo = document.getElementById("formTitulo").value.trim();
-      const autor = document.getElementById("formAutor").value.trim();
-      const categoria = document.getElementById("formCategoria").value;
-      const resumo = document.getElementById("formResumo").value.trim();
-
-      if (!titulo || !autor || !resumo || !arquivoUploadTemp) {
-        alert("Por favor, preencha todos os campos e anexe um arquivo antes de publicar.");
-        return;
-      }
-
-      const fileURL = URL.createObjectURL(arquivoUploadTemp);
-
-      artigosForum.unshift({
-        titulo: titulo,
-        autor: autor,
-        categoria: categoria,
-        dataPublicacao: "Setembro/2026",
-        resumo: resumo,
-        nomeArquivo: arquivoUploadTemp.name,
-        urlArquivo: fileURL
-      });
-
-      // Limpa formulário
-      document.getElementById("formTitulo").value = "";
-      document.getElementById("formAutor").value = "";
-      document.getElementById("formResumo").value = "";
-      document.getElementById("nomeArquivoSelecionado").innerText = "Nenhum arquivo anexado";
-      arquivoUploadTemp = null;
-
-      trocarAbaForum('repo');
-      renderizarArtigosForum();
-      alert("Pesquisa publicada com sucesso no acervo permanente da LAVD!");
-    }
-
-    // --- FICHAMENTO PERSISTENTE (LOCALSTORAGE) ---
-    function carregarAnotacoesSalvas() {
-      const salvas = localStorage.getItem("lavd_anotacoes_pesquisa");
-      const padrao = `# Caderno de Fichamento e Análise - LAVD\n\n## Hipóteses de Investigação:\n1. Concentração espacial da letalidade violenta em Maceió nas regiões do Benedito Bentes, Jacintinho e Cidade Universitária.\n2. Proporção dominante do calibre 9mm nas execuções de facções rivais a partir de 2022.\n3. Tempo médio de conclusão dos Inquéritos Policiais da DHPP até o oferecimento de denúncia pelo Ministério Público.\n\n## Notas de Reunião:\n- Solicitar dados tabulares adicionais ao NEAC/SSP-AL via e-SIC.\n- Cruzar registros de feminicídio com concessão prévia de medidas protetivas na 1ª Vara de Arapiraca e Maceió.`;
-      document.getElementById("anotacoesTexto").value = salvas ? salvas : padrao;
-    }
-
-    function salvarAnotacoes() {
-      const val = document.getElementById("anotacoesTexto").value;
-      localStorage.setItem("lavd_anotacoes_pesquisa", val);
-      const st = document.getElementById("statusSalvoAnotacoes");
-      st.classList.remove("hidden");
-      setTimeout(() => st.classList.add("hidden"), 3000);
-    }
-
-    // --- EXPORTAR CSV ---
-    function exportarCSV() {
-      const dados = filtrarOcorrencias();
-      let csv = "BO,Procedimento_Judicial,Data_Hora,Ano,Turno,Municipio,Bairro,Logradouro,Tipificacao,Instrumento,Vitima,Motivacao,Status_Persecucao,Orgao_Responsavel,Laudo_Concluido,Medida_Protetiva,Fonte_Primaria,Chave_Autenticidade\n";
+      const lista = document.getElementById("listaArtigosForum");
+      const filtro = document.getElementById("buscaForumInput").value.toLowerCase();
+      lista.innerHTML = "";
       
-      dados.forEach(o => {
-        csv += `"${o.id}","${o.numeroProcedimento}","${o.dataHora}",${o.ano},"${o.turno}","${o.municipio}","${o.bairroRegiao}","${o.logradouroReferencia}","${o.tipificacaoPenal}","${o.instrumentoCalibre}","${o.perfilVitima}","${o.motivacaoAparente}","${o.statusPersecucao}","${o.orgaoResponsavel}",${o.laudoPericialConcluido},${o.presencaMedidaProtetiva},"${o.fonteOficial}","${o.chaveAutenticidadeDocumento}"\n`;
+      const filtrados = ARTIGOS.filter(a => a.titulo.toLowerCase().includes(filtro) || a.autor.toLowerCase().includes(filtro) || a.cat.toLowerCase().includes(filtro));
+      
+      if(filtrados.length === 0) {
+        lista.innerHTML = `<p class="text-slate-400 text-sm italic">Nenhum artigo encontrado com esse termo.</p>`;
+        return;
+      }
+
+      filtrados.forEach(art => {
+        lista.innerHTML += `
+          <div class="p-5 bg-white border border-slate-200 rounded-xl flex justify-between items-center hover:border-indigo-400 hover:shadow-md transition group">
+            <div>
+              <h5 class="text-sm font-black text-indigo-950 group-hover:text-indigo-700 transition">${art.titulo}</h5>
+              <p class="text-xs text-slate-500 mt-1 font-medium">${art.autor} • ${art.data}</p>
+              <span class="inline-block mt-3 text-[9px] bg-slate-100 text-slate-600 px-2 py-1 rounded-md font-black uppercase tracking-wider">${art.cat}</span>
+            </div>
+            <button class="text-indigo-600 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-lg text-xs font-black hover:bg-indigo-600 hover:text-white transition shadow-sm ml-4 shrink-0">
+              ⬇️ PDF
+            </button>
+          </div>
+        `;
       });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `LAVD_Acervo_Persecucao_Penal_${estado.ano}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
 
-    // --- MODAIS GLOBAIS ---
-    function abrirModal(id) {
-      document.getElementById(id).classList.remove("hidden");
+    function submeterPesquisa(event) {
+      event.preventDefault();
+      const titulo = document.getElementById("formTitulo").value;
+      const autor = document.getElementById("formAutor").value;
+      const categoria = document.getElementById("formCategoria").value;
+      
+      ARTIGOS.unshift({ titulo: titulo, autor: autor, cat: categoria, data: "Hoje" });
+
+      alert("🎉 Pesquisa submetida com sucesso ao repositório GEVID!");
+      document.getElementById("formForum").reset();
+      renderizarArtigosForum();
     }
 
-    function fecharModal(id) {
-      document.getElementById(id).classList.add("hidden");
+    // ==========================================
+    // MURAL PÚBLICO (LOCALSTORAGE)
+    // ==========================================
+    const campoMural = document.getElementById("blocoNotasArea");
+    const badgeSalvo = document.getElementById("badge-salvo");
+    let timeoutSalvar = null;
+
+    function carregarMural() {
+      const conteudoSalvo = localStorage.getItem("gevid_mural_publico");
+      if(conteudoSalvo) campoMural.value = conteudoSalvo;
     }
+
+    campoMural.addEventListener("input", () => {
+      clearTimeout(timeoutSalvar);
+      badgeSalvo.style.opacity = "0"; 
+      timeoutSalvar = setTimeout(() => {
+        localStorage.setItem("gevid_mural_publico", campoMural.value);
+        badgeSalvo.style.opacity = "1"; 
+        setTimeout(() => badgeSalvo.style.opacity = "0", 3000); 
+      }, 800);
+    });
+
+    // ==========================================
+    // INICIALIZAÇÃO GERAL
+    // ==========================================
+    window.onload = () => {
+      inicializarFiltrosLAVD();
+      inicializarGraficoGevid();
+      renderizarArtigosForum();
+      carregarMural();
+    };
   </script>
 </body>
 </html>
-Atualização da interface LAVD com jurimetria e fórum
